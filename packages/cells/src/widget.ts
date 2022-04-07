@@ -361,6 +361,16 @@ export class Cell<T extends ICellModel = ICellModel> extends Widget {
     this._input.setPrompt(value);
   }
 
+  setCellIndicatorColor(indicatorClass: string): void {
+    let inputWrapperClasses: string = this._inputWrapper.node.className;
+    let CellIndicatorClass = inputWrapperClasses.split(' ').filter((inputClassName) => inputClassName.startsWith("cell-indicator-"));
+    if (CellIndicatorClass){
+      this._inputWrapper.removeClass(CellIndicatorClass[0]);
+    }
+    if(indicatorClass){
+      this._inputWrapper.addClass(indicatorClass);
+    }
+  }
   /**
    * The view state of input being hidden.
    */
@@ -1006,6 +1016,7 @@ export class CodeCell extends Cell<ICodeCellModel> {
     switch (args.name) {
       case 'executionCount':
         this.setPrompt(`${(model as ICodeCellModel).executionCount || ''}`);
+        this.setCellIndicatorColor(`${(model as ICodeCellModel).cellIndicatorClass || ''}`);
         break;
       case 'isDirty':
         if ((model as ICodeCellModel).isDirty) {
@@ -1172,6 +1183,24 @@ export namespace CodeCell {
         timingInfo['shell.execute_reply'] =
           finished || new Date().toISOString();
         model.metadata.set('execution', timingInfo);
+      }
+      let cellIndicatorClass: string = model.cellIndicatorClass;
+      if(cellIndicatorClass){
+        let cellColor: string = cellIndicatorClass.split("-").pop() || '';
+        let cellColorCss: string = '.'+cellIndicatorClass + ' > .jp-Collapser { background: '+cellColor+'; }';
+        let style = document.getElementById('color-cell-indicator');
+        if(style){
+          if(!style.innerHTML.includes(cellIndicatorClass)){
+            style.innerHTML += cellColorCss
+          }
+        }
+        else{
+          let head = document.head || document.getElementsByTagName('head')[0];
+          let style = document.createElement('style');
+          head.appendChild(style);
+          style.appendChild(document.createTextNode(cellColorCss));
+          style.id = 'color-cell-indicator'  
+        }
       }
       return msg;
     } catch (e) {

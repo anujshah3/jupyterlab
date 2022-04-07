@@ -28,6 +28,8 @@ import {
 } from '@jupyterlab/observables';
 
 import { IOutputAreaModel, OutputAreaModel } from '@jupyterlab/outputarea';
+import { checkColorCodeInCell } from './colorValues';
+
 const globalModelDBMutex = models.createMutex();
 
 /**
@@ -70,6 +72,7 @@ export interface ICellModel extends CodeEditor.IModel {
    * Serialize the model to JSON.
    */
   toJSON(): nbformat.ICell;
+
 }
 
 /**
@@ -118,6 +121,8 @@ export interface ICodeCellModel extends ICellModel {
    * Clear execution, outputs, and related metadata
    */
   clearExecution(): void;
+
+  cellIndicatorClass: string;
 }
 
 /**
@@ -731,6 +736,14 @@ export class CodeCellModel extends CellModel implements ICodeCellModel {
     // Test could be done dynamically with this._executedCode
     // but for performance reason, the diff status is stored in a boolean.
     return this._isDirty;
+  }
+
+  get cellIndicatorClass(): string{
+    let color: string = checkColorCodeInCell(this.value.text);
+    if (color){
+      return 'cell-indicator-'+color;
+    }
+    return '';
   }
 
   /**
